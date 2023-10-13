@@ -45,7 +45,7 @@ def main():
         # 计算SMA20，添加到表头
         sema20 = ema20.rolling(window=20).mean()
         ema_sma_percent_diff = round(((ema20 - sema20) / sema20) * 100, 3)
-
+        
         # --------------- MACD -----------------------------------------------------------------------
         since = None
         fast = 12

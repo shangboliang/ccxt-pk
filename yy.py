@@ -10,6 +10,8 @@ import time
 import pandas_ta as ta
 import pandas as pd
 from pytz import timezone  # 引入时区库
+import traceback
+
 # 初始化 CCXT 交易所和 Telegram Bot
 exchange = ccxt.binance({
     'enableRateLimit': True,
@@ -33,24 +35,31 @@ print("Starting.... 开始")
 async def check_ohlcv():
     while True:
         subscriptions = {
-            ('BTC/USDT', '1h'): {
-                'chat_id_1': {
-                    'indicator': 'price',
-                    'threshold': 100
-                },
-                'chat_id_2': {
-                    'indicator': 'volume',
-                    'threshold': 10000
+                    ('BTC/USDT', '1h'): {
+                        'chat_id_1': [
+                            {
+                                'indicator': 'price',
+                                'threshold': 100
+                            },
+                            {
+                                'indicator': 'volume',
+                                'threshold': 10000
+                            }
+                        ],
+                    },
+                    ('ETH/USDT', '4h'): {
+                        'chat_id_3': [
+                            {
+                                'indicator': 'price',
+                                'threshold': 200
+                            },
+                            {
+                                'indicator': 'volume',
+                                'threshold': 5000
+                            }
+                        ],
+                    },
                 }
-            },
-            ('ETH/USDT', '4h'): {
-                'chat_id_3': {
-                    'indicator': 'price',
-                    'threshold': 200
-                }
-            },
-        }
-
         if subscriptions:
             print(subscriptions)
             for symbol, timeframe in subscriptions.keys():
@@ -61,10 +70,12 @@ async def check_ohlcv():
                     print('OHLCV success ...')
 
                     for chat_id, indicator_thresholds  in subscriptions[(symbol, timeframe)].items():
-                        indicatorList = None
+                        indicatorList = [] 
+                        thresholdList = []
                         for indicator_threshold in indicator_thresholds:
-                            indicatorList = indicator_threshold['indicator']
-                            thresholdList = indicator_threshold['threshold']
+                            indicatorList.append(indicator_threshold['indicator'])
+                            thresholdList.append(indicator_threshold['threshold'])
+
                         latest_ohlcv = ohlcv[-1]
                         close_price = latest_ohlcv[4]  # 收盘价
                         
@@ -81,52 +92,57 @@ async def check_ohlcv():
                         ema20 =df.ta.ema(close='close',length=20)
                         sma20 =df.ta.sma(close='close',length=20)
                         df['ema20'] = ema20
-                        df['sma20'] = sema20
+                        df['sma20'] = sma20
                         sema20 = ema20.rolling(window=20).mean()
                         ema_sma_percent_diff = round(((ema20 - sema20) / sema20) * 100, 3)
                         df['ema_sma_percent_diff'] = ema_sma_percent_diff
 
                         latest_data = df.iloc[-1]
                         print (latest_data)
-
+                        ii = indicatorList.index('price')
+                        print(ii)
+                        print(thresholdList[ii] )
+                        print('price' in indicatorList)
                         # -------------------  close price---------------------------------------------------------------
-                        if 'price' in indicatorList:
-                            threshold = thresholdList[indicatorList.index('price')] 
-                            if close_price >= threshold:
-                                text = f"价格预警：{symbol} 当前收盘价：{close_price}"
-                                print(text)
-                                # bot.send_message(chat_id=chat_id, text=text)
+                        # if 'price' in indicatorList:
+                        #     threshold = thresholdList[indicatorList.index('price')] 
+                        #     if close_price >= threshold:
+                        #         text = f"价格预警：{symbol} 当前收盘价：{close_price}"
+                        #         print(text)
+                        #         # bot.send_message(chat_id=chat_id, text=text)
 
-                        if 'ema' in indicatorList:
-                            threshold = thresholdList[indicatorList.index('price')] 
-                            pass
-                        if 'sma' in indicatorList:
-                            threshold = thresholdList[indicatorList.index('price')] 
-                            # 执行 SMA 预警逻辑
-                            pass
-                        # -------------------  SMA-EMA---------------------------------------------------------------
-                        if 'sema' in indicatorList:
-                            threshold = thresholdList[indicatorList.index('price')] 
-                            # 计算SEMA20，添加到表头
-                            if abs(latest_data['ema_sma_percent_diff'])<0.01:
-                                text = f"sema预警：{symbol} 当前收盘价：{close_price}"
-                                print(text)
-                                # bot.send_message(chat_id=chat_id, text=text)
-                        if 'rsi' in indicatorList:
-                            # 执行 RSI 预警逻辑
-                            pass
-                        if 'boll' in indicatorList:
-                            # 执行 Bollinger 预警逻辑
-                            pass
-                        await asyncio.sleep(1)
+                        # if 'ema' in indicatorList:
+                        #     threshold = thresholdList[indicatorList.index('price')] 
+                        #     pass
+                        # if 'sma' in indicatorList:
+                        #     threshold = thresholdList[indicatorList.index('price')] 
+                        #     # 执行 SMA 预警逻辑
+                        #     pass
+                        # # -------------------  SMA-EMA---------------------------------------------------------------
+                        # if 'sema' in indicatorList:
+                        #     threshold = thresholdList[indicatorList.index('price')] 
+                        #     # 计算SEMA20，添加到表头
+                        #     if abs(latest_data['ema_sma_percent_diff'])<0.01:
+                        #         text = f"sema预警：{symbol} 当前收盘价：{close_price}"
+                        #         print(text)
+                        #         # bot.send_message(chat_id=chat_id, text=text)
+                        # if 'rsi' in indicatorList:
+                        #     # 执行 RSI 预警逻辑
+                        #     pass
+                        # if 'boll' in indicatorList:
+                        #     # 执行 Bollinger 预警逻辑
+                        #     pass
+                        # await asyncio.sleep(1)
                 except Exception as e:
+                    traceback.print_exc()  # 打印异常的堆栈跟踪信息
+
                     # 处理异常
                     print(f"发生异常：{str(e)}")
                     pass
             print('--------------------------------')
         
         # 等待一分钟
-            await asyncio.sleep(2)
+            # await asyncio.sleep(2)
 
 # 主函数
 def main():
