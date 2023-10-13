@@ -99,40 +99,38 @@ async def check_ohlcv():
 
                         latest_data = df.iloc[-1]
                         print (latest_data)
-                        ii = indicatorList.index('price')
-                        print(ii)
-                        print(thresholdList[ii] )
-                        print('price' in indicatorList)
-                        # -------------------  close price---------------------------------------------------------------
-                        # if 'price' in indicatorList:
-                        #     threshold = thresholdList[indicatorList.index('price')] 
-                        #     if close_price >= threshold:
-                        #         text = f"价格预警：{symbol} 当前收盘价：{close_price}"
-                        #         print(text)
-                        #         # bot.send_message(chat_id=chat_id, text=text)
 
-                        # if 'ema' in indicatorList:
-                        #     threshold = thresholdList[indicatorList.index('price')] 
-                        #     pass
-                        # if 'sma' in indicatorList:
-                        #     threshold = thresholdList[indicatorList.index('price')] 
-                        #     # 执行 SMA 预警逻辑
-                        #     pass
-                        # # -------------------  SMA-EMA---------------------------------------------------------------
-                        # if 'sema' in indicatorList:
-                        #     threshold = thresholdList[indicatorList.index('price')] 
-                        #     # 计算SEMA20，添加到表头
-                        #     if abs(latest_data['ema_sma_percent_diff'])<0.01:
-                        #         text = f"sema预警：{symbol} 当前收盘价：{close_price}"
-                        #         print(text)
-                        #         # bot.send_message(chat_id=chat_id, text=text)
-                        # if 'rsi' in indicatorList:
-                        #     # 执行 RSI 预警逻辑
-                        #     pass
-                        # if 'boll' in indicatorList:
-                        #     # 执行 Bollinger 预警逻辑
-                        #     pass
-                        # await asyncio.sleep(1)
+                        #-------------------  close price---------------------------------------------------------------
+                        if 'price' in indicatorList:
+                            threshold = thresholdList[indicatorList.index('price')] 
+                            if close_price >= threshold:
+                                text = f"价格预警：{symbol} 当前收盘价：{close_price}"
+                                print(text)
+                                # bot.send_message(chat_id=chat_id, text=text)
+                                
+                        # -------------------  SMA-EMA---------------------------------------------------------------
+                        if 'ema' in indicatorList:
+                            threshold = thresholdList[indicatorList.index('ema')] 
+                            pass
+                        if 'sma' in indicatorList:
+                            threshold = thresholdList[indicatorList.index('sma')] 
+                            # 执行 SMA 预警逻辑
+                            pass
+                        if 'ema_sma_percent_diff' in indicatorList:
+                            threshold = thresholdList[indicatorList.index('ema_sma_percent_diff')] 
+                            # 计算SEMA20，添加到表头
+                            if abs(latest_data['ema_sma_percent_diff'])<0.01:
+                                text = f"sema预警：{symbol} 当前收盘价：{close_price}"
+                                print(text)
+                                # bot.send_message(chat_id=chat_id, text=text)
+                        
+                        if 'rsi' in indicatorList:
+                            # 执行 RSI 预警逻辑
+                            pass
+                        if 'boll' in indicatorList:
+                            # 执行 Bollinger 预警逻辑
+                            pass
+                        await asyncio.sleep(1)
                 except Exception as e:
                     traceback.print_exc()  # 打印异常的堆栈跟踪信息
 
