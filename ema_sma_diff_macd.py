@@ -24,9 +24,8 @@ def main():
             'https': 'http://127.0.0.1:7890'
         }
     })
-
     markets = exchange.load_markets()
-    ohlcv = exchange.fetch_ohlcv('BTC/USDT', '4h')
+    ohlcv = exchange.fetch_ohlcv('BTC/USDT', '5m',limit=100)
     if len(ohlcv):
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -67,7 +66,7 @@ def main():
         rsi_length = 100
         df = pd.concat([df, df.ta.rsi(length=rsi_length)], axis=1)
 
-        print(df.tail(10))
+        print(df.tail(1000))
 
 
 
