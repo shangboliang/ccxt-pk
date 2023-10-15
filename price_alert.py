@@ -87,9 +87,9 @@ async def check_ohlcv(context: ContextTypes.DEFAULT_TYPE):
                         sma20 = df.ta.sma(close='close', length=20)
                         df['ema20'] = ema20
                         sema20 = ema20.rolling(window=20).mean()
+                        df['sma20'] = sma20
+                        sema20 = round(((ema20 - sema20) / sema20) * 100, 3)
                         df['sema20'] = sema20
-                        ema_sma_percent_diff = round(((ema20 - sema20) / sema20) * 100, 3)
-                        df['ema_sma_percent_diff'] = ema_sma_percent_diff
                         second_latest_data = df.iloc[-2]
 
                         latest_data = df.iloc[-1]
@@ -108,15 +108,18 @@ async def check_ohlcv(context: ContextTypes.DEFAULT_TYPE):
                         if 'sma' in indicatorList:
                             threshold = thresholdList[indicatorList.index('sma')]
                             pass
-                        if 'ema_sma_percent_diff' in indicatorList:
-                            threshold = thresholdList[indicatorList.index('ema_sma_percent_diff')]
+                        if 'sema20' in indicatorList:
+                            threshold = thresholdList[indicatorList.index('sema20')]
                             threshold = float(threshold)
-                            if abs(latest_data['ema_sma_percent_diff']) < threshold:
-                                text = f"sema预警{symbol} 当前价：{close_price}"
+                            if abs(latest_data['sema20']) < threshold:
+                                text = f"sema预警{symbol} 当前价：{close_price} ema20:{ema20}"
                                 logging.info(f'{text}')
                                 await context.bot.send_message(chat_id=chat_id, text=text)
-                            if (second_latest_data['ema_sma_percent_diff'] > 0 and latest_data['ema_sma_percent_diff'] < 0) or (second_latest_data['ema_sma_percent_diff'] < 0 and latest_data['ema_sma_percent_diff'] > 0):
-                                text = f"sema预警{symbol} 当前价：{close_price},{timeframe}级别反转"
+                            if (second_latest_data['sema20'] > 0 and latest_data['sema20'] < 0) or (second_latest_data['sema20'] < 0 and latest_data['sema20'] > 0):
+                                fangxiang='空'
+                                if latest_data['sema20'] > 0:
+                                    fangxiang='多'
+                                text = f"sema预警{symbol} 当前价：{close_price},{timeframe}级别反转，{fangxiang}’"
                                 await context.bot.send_message(chat_id=chat_id, text=text)
                         if 'rsi' in indicatorList:
                             pass
@@ -136,7 +139,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(chat_id=chat_id, text=text)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("/sub BTC/USDT:USDT 5m sema 20000 1")
+    await update.message.reply_text("/sub BTC/USDT:USDT 5m sema20 20000 1")
 
 async def sub_handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     data = context.args
